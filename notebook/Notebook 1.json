@@ -1,0 +1,71 @@
+{
+	"name": "Notebook 1",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "izspark",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "659da67e-5a1d-478d-b13b-db5d75fd818d"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/2b86a5a0-e6e8-40d7-b6ce-8c48e7b3f707/resourceGroups/ResGrpCont1/providers/Microsoft.Synapse/workspaces/izsynapseworkspace/bigDataPools/izspark",
+				"name": "izspark",
+				"type": "Spark",
+				"endpoint": "https://izsynapseworkspace.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/izspark",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.5",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"df = spark.read.format(\"csv\").option(\"inferschema\",True).load(\"abfss://container1@we47storage1.dfs.core.windows.net/sourcedir/txns\") \\\n",
+					".toDF(\"txnid\",\"txndate\",\"custid\",\"amount\",\"category\",\"product\",\"city\",\"state\",\"paytype\")\n",
+					"df.printSchema()\n",
+					"df.show(2)"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df.write.saveAsTable(\"default.txnstbl\",mode='overwrite')\n",
+					"spark.sql(\"select * from default.txnstbl\").show()"
+				],
+				"execution_count": null
+			}
+		]
+	}
+}

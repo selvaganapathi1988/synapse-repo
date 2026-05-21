@@ -1,0 +1,17 @@
+{
+	"name": "5_Bulk_Copy_Mat_View",
+	"properties": {
+		"content": {
+			"query": "--Performing Bulk load into table using copy INTO function\n\nCREATE TABLE bank_schema.customerdata(\n    custid INT,\n    fname varchar(100),\n    lname varchar(100),\n    age int,\n    prof varchar(100)\n)\nWITH\n(\n     CLUSTERED COLUMNSTORE INDEX,\n     DISTRIBUTION = ROUND_ROBIN\n);\n\n\nCOPY INTO bank_schema.customerdata\nFROM 'https://we47storage1.blob.core.windows.net/container1/sourcedir/custs'\nWITH(\n    FILE_TYPE = 'CSV',\n    FIRSTROW = 1\n);\n\nselect * from bank_schema.customerdata;\n\n\n--Load the data from external storage account using Managed Identity, can be done on Dedicated warehouse also.\n\nCREATE TABLE bank_schema.customerdata2(\n    custid INT,\n    fname varchar(100),\n    lname varchar(100),\n    age int,\n    prof varchar(100)\n)\nWITH\n(\n     CLUSTERED COLUMNSTORE INDEX,\n     DISTRIBUTION = ROUND_ROBIN\n);\n\n\n\n--Goto storage account -> IAM -> provide \"Storage Blob data contributor\" role for the synapse workspace managed identity\n\nCOPY INTO bank_schema.customerdata2\nFROM 'https://balajiadlsstoragewd36.blob.core.windows.net/container1/srcdir/custs'\nWITH(\n    FILE_TYPE = 'CSV',\n    FIRSTROW = 1,\n    CREDENTIAL=(IDENTITY='Managed Identity'));\n\nselect * from bank_schema.customerdata2;\n\n--Materialized View Usecase\n-- Customer Demographics Analytics Dashboard\n--Slow without mat view as it scans full table every time\nSELECT \n    prof,\n    COUNT(*) AS total_customers,\n    AVG(age) AS avg_age\nFROM bank_schema.customerdata\nGROUP BY prof;\n\n--With Mat View (optimized)\n-- Refreshes MV incrementally without any overhead\n-- Avoids full table scan and avoid recomputation and it does only incremental refresh of the data from the base table (behind the scene)\n-- Applicable in the analytical/gold layer more of, for best analytics performance (incremental, auto refresh, no need of writing complex queries)\n--Materialized view (store current snapshot data, access only incremental data from the base table without doint full table scan, automatic refresh)\n--Normal view (doesn't store data, access entire data every time from the entire base table, no automatic refresh)\nCREATE MATERIALIZED VIEW bank_schema.mv_customer_prof_stats1\nWITH (DISTRIBUTION = HASH(prof))\nAS\nSELECT \n    prof,\n    COUNT_BIG(*) AS total_customers,\n    AVG(age) AS avg_age\n    FROM bank_schema.customerdata\nGROUP BY prof;\n\nselect * from bank_schema.mv_customer_prof_stats1;\n--Was -> Athlete 196 9418 196 \n\ninsert into bank_schema.customerdata values(10001,'mohamed','irfan',44,'Athlete');\nselect * from bank_schema.mv_customer_prof_stats1;\n--Now -> Athlete 197 9462 197 (behind the scene the mat view just added the one more record in the aggregation like... 196+1 added)\n--If i go with normal view, it will take 1 + 1 + 1 +....196 + 1 = 197",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "we47dedpool",
+				"poolName": "we47dedpool"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
