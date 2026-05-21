@@ -1,2 +1,1 @@
-# synapse-repo
-synapse codes
+# balanchander-synapse-repo
