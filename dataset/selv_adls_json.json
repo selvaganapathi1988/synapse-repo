@@ -1,0 +1,39 @@
+{
+	"name": "selv_adls_json",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage2",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "sample1.json",
+				"folderPath": "source_dir",
+				"fileSystem": "container1"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"sepal.length": {
+					"type": "number"
+				},
+				"sepal.width": {
+					"type": "number"
+				},
+				"petal.length": {
+					"type": "number"
+				},
+				"petal.width": {
+					"type": "number"
+				},
+				"variety": {
+					"type": "string"
+				}
+			}
+		}
+	}
+}
